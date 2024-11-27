@@ -24,16 +24,18 @@ const INITIAL_STATE = {
 const AuthContext = createContext<IContextType>(INITIAL_STATE);
 
 function AuthProvider ({ children }: { children: React.ReactNode }) {
+    
+    const navigate = useNavigate();
     const [ user, setUser ] = useState<IUser>(INITIAL_USER);
     const [ isLoading, setIsLoading ] = useState(false);
     const [ isAuthenticated, setIsAuthenticated ] = useState(false);
 
-    const navigate = useNavigate();
-
     const checkAuthUser = async () => {
+        setIsLoading(true)
+        
         try {
             const currentAccount = await getCurrentUser();
-
+            
             if (currentAccount) {
                 setUser({
                     id: currentAccount.$id,
@@ -43,12 +45,10 @@ function AuthProvider ({ children }: { children: React.ReactNode }) {
                     imageUrl: currentAccount.imageUrl,
                     bio: currentAccount.bio
                 })
-
                 setIsAuthenticated(true);
 
                 return true
             }
-
             return false
         } catch (error) {
             console.log(error);
@@ -59,12 +59,14 @@ function AuthProvider ({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
+        const cookieFallback = localStorage.getItem('cookieFallback')
         if (
-            localStorage.getItem('cookieFallback') === '[]' ||
-            localStorage.getItem('cookieFallback') === null
-        ) navigate('/sign-in')
-        
-        checkAuthUser();
+            cookieFallback === '[]' ||
+            cookieFallback === null ||
+            cookieFallback === undefined
+        ) {
+            navigate('/sign-in')
+        } else checkAuthUser();
     }, [])
 
     const value = {

@@ -15,12 +15,11 @@ import { useUserContext } from "../../context/AuthContext"
 function SignInForm() {
 
   const { toast } = useToast()
-  const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
   const navigate = useNavigate();
+  const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
 
-  const { mutateAsync: signInAccount } = useSignInAccount();
+  const { mutateAsync: signInAccount, isPending } = useSignInAccount();
 
-    // 1. Define your form.
   const form = useForm<z.infer<typeof SignInValidation>>({
     resolver: zodResolver(SignInValidation),
     defaultValues: {
@@ -29,16 +28,12 @@ function SignInForm() {
     },
   })
  
-  // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof SignInValidation>) {
+  const handleSignIn = async (user: z.infer<typeof SignInValidation>) => {
 
-    const session = await signInAccount({
-      email: values.email,
-      password: values.password,
-    })
+    const session = await signInAccount(user)
 
     if (!session) {
-      return toast({ title: "Sign in failed. Please try again." })
+      return toast({ title: "Login failed. Please try again." })
     }
 
     const isLoggedIn = await checkAuthUser()
@@ -48,7 +43,7 @@ function SignInForm() {
 
       navigate('/')
     } else {
-      return toast({ title: "Sign in failed. Please try again." })
+      return toast({ title: "Login failed. Please try again." })
     }
   }
 
@@ -57,42 +52,50 @@ function SignInForm() {
       <div className="sm:w-420 flex-center flex-col">
         <img src="/assets/images/logo.svg" />
 
-        <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">Log in to your account</h2>
-        <p className="text-light-3 small-medium md:base-regulare mt-2">Welcome back, please enter your account details</p>
+        <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">
+          Log in to your account
+        </h2>
+        <p className="text-light-3 small-medium md:base-regulare mt-2">
+          Welcome back, please enter your account details
+        </p>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 w-full mt-4">
+        <form
+          onSubmit={form.handleSubmit(handleSignIn)}
+          className="flex flex-col gap-5 w-full mt-4">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-              <Input type="email" className="shad-input" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" className="shad-input" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-              <Input type="password" className="shad-input" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" className="shad-input" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
+
           <Button type="submit" className="shad-button_primary">
-            {isUserLoading ? (
+            {isUserLoading || isPending ? (
               <div className="flex-center gap-2">
-                <Loader />Loading...
+                <Loader /> Loading...
               </div>
-            ) : "Sign In"}
+            ) : "Login"}
           </Button>
 
           <p className="text-small-regular text-light-2 text-center mt-2">
